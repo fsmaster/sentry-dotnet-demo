@@ -134,7 +134,7 @@ Open the new issue. The stack trace should read:
 ```
 PriceCalculator.UnitPrice          src/HelloSentry/Demo/PriceCalculator.cs:10
 CheckoutService.Checkout           src/HelloSentry/Demo/CheckoutService.cs:15
-Program.Run                        src/HelloSentry/Program.cs:78
+Program.Run                        src/HelloSentry/Program.cs:67
 ```
 
 ...with the offending line rendered inline and an **Open in GitHub** link on each frame,
