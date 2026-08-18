@@ -63,6 +63,11 @@
          lets Sentry resolve a stack frame to a blob URL on GitHub. -->
     <SentryCreateRelease Condition="'$(SentryCreateRelease)' == ''">true</SentryCreateRelease>
     <SentrySetCommits Condition="'$(SentrySetCommits)' == ''">true</SentrySetCommits>
+
+    <!-- A bad token or an unreachable Sentry should not break the build: release
+         creation would otherwise fail the whole thing. Symbol upload already only
+         warns. Set this to false if you would rather find out loudly. -->
+    <SentryAllowFailure Condition="'$(SentryAllowFailure)' == ''">true</SentryAllowFailure>
   </PropertyGroup>
 
 </Project>

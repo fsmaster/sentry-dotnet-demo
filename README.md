@@ -84,7 +84,8 @@ Source Link itself needs no NuGet package — it has shipped inside the .NET SDK
 `sentry-cli` needs no install either — it comes inside the `Sentry` NuGet package.
 
 The upload block is **off unless `SENTRY_AUTH_TOKEN` is set**, so an ordinary
-`dotnet build` never touches the network.
+`dotnet build` never touches the network. `SentryAllowFailure=true` keeps a flaky Sentry
+from failing the build; `-p:UseSentryCLI=false` disables the CLI outright.
 
 ### 3b. One-time setup in Sentry
 
@@ -166,7 +167,8 @@ uploads symbols and registers the release with its commits; without them it just
 | Frames show `<unknown>` / no line numbers | PDBs were never uploaded, or the DLL was rebuilt after the upload (new debug-id). Rebuild **and** re-upload together. |
 | File + line resolve, but no GitHub link | Missing code mapping, or the release has no associated commits (`SentrySetCommits`). |
 | "Source file not found" on GitHub | The commit is not pushed, or the mapping's stack root does not match the frame path. |
-| `The Sentry CLI is not fully configured` | `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` not all set. Harmless — upload is skipped. |
+| `The Sentry CLI is not fully configured` | `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` not all set. Harmless — upload is skipped and the build succeeds. |
+| Build **fails** with `EXEC : error : API request failed` | A token that is set but invalid, or a Sentry server that cannot be reached. `sentry-cli info` writes that to stderr and MSBuild parses it as an error, so it fails the build even though `SentryAllowFailure` is on. Fix the token, or bypass Sentry entirely with `-p:UseSentryCLI=false`. |
 | Release shows as `1.0.0` with no `+sha` | Built from a directory with no git repo, so Source Link had no commit to stamp. |
 
 ## Layout
