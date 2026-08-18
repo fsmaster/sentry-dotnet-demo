@@ -1,0 +1,68 @@
+<Project>
+
+  <!--
+    ============================================================================
+     Source Link  -  the part that makes "view source on GitHub" work in Sentry
+    ============================================================================
+     Source Link stamps the *portable PDB* with the repository URL and the exact
+     commit SHA that produced the binary. Sentry reads that out of the uploaded
+     symbols, so every stack frame knows which GitHub blob (and line) it came
+     from. Since .NET 8 the SDK ships Source Link in the box - no PackageReference
+     needed, just these properties.
+  -->
+  <PropertyGroup>
+    <!-- Portable PDBs: the only symbol format Sentry can read for managed .NET. -->
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+
+    <!-- Write the repo URL into the PDB / NuSpec instead of a local disk path. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <!-- Embed sources that git does not track (generated files) so no frame is blank. -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds: identical source + commit => identical binary + PDB. -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <!-- Append the commit SHA to the informational version: "1.0.0+<sha>".
+         The app reads it back at runtime and uses it as the Sentry release name. -->
+    <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <!--
+    ============================================================================
+     Sentry CLI  -  symbol, source and release upload at build time
+    ============================================================================
+     The Sentry NuGet package bundles sentry-cli and hooks it into the build.
+     Everything below is OFF unless SENTRY_AUTH_TOKEN is present in the
+     environment, so a plain `dotnet build` never talks to the network.
+
+     Set these to switch it on (see README):
+       SENTRY_AUTH_TOKEN   internal integration token with project:releases
+       SENTRY_ORG          organization slug
+       SENTRY_PROJECT      project slug
+       SENTRY_URL          self-hosted base URL (omit for sentry.io)
+  -->
+  <PropertyGroup Condition="'$(SENTRY_AUTH_TOKEN)' != ''">
+    <SentryOrg Condition="'$(SentryOrg)' == ''">$(SENTRY_ORG)</SentryOrg>
+    <SentryProject Condition="'$(SentryProject)' == ''">$(SENTRY_PROJECT)</SentryProject>
+    <SentryAuthToken Condition="'$(SentryAuthToken)' == ''">$(SENTRY_AUTH_TOKEN)</SentryAuthToken>
+    <SentryUrl Condition="'$(SentryUrl)' == ''">$(SENTRY_URL)</SentryUrl>
+
+    <!-- Upload the portable PDBs so frames get file names and line numbers. -->
+    <SentryUploadSymbols Condition="'$(SentryUploadSymbols)' == ''">true</SentryUploadSymbols>
+
+    <!-- Upload the source files too. Optional: with the GitHub integration Sentry
+         can fetch source straight from the repo instead. Leave false to prove the
+         GitHub path really works; flip to true if the repo is private and you do
+         not want to install the integration. -->
+    <SentryUploadSources Condition="'$(SentryUploadSources)' == ''">false</SentryUploadSources>
+
+    <!-- Create the release and associate it with the git commits, which is what
+         lets Sentry resolve a stack frame to a blob URL on GitHub. -->
+    <SentryCreateRelease Condition="'$(SentryCreateRelease)' == ''">true</SentryCreateRelease>
+    <SentrySetCommits Condition="'$(SentrySetCommits)' == ''">true</SentrySetCommits>
+  </PropertyGroup>
+
+</Project>

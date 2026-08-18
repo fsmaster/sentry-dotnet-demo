@@ -1,0 +1,50 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      # Configure these as repository secrets/variables to turn on the upload.
+      # Without SENTRY_AUTH_TOKEN the build still succeeds - it just skips Sentry.
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+      SENTRY_URL: ${{ vars.SENTRY_URL }}          # omit for sentry.io
+      SENTRY_RELEASE: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # sentry-cli needs real history to associate commits with the release.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      # Directory.Build.props flips SentryUploadSymbols / SentryCreateRelease /
+      # SentrySetCommits on as soon as SENTRY_AUTH_TOKEN is set, so this single
+      # build also ships the portable PDBs and the release + commit metadata.
+      - name: Build (and upload debug symbols to Sentry)
+        run: dotnet build -c Release --no-restore
+
+      - name: Smoke test
+        run: dotnet run --project src/HelloSentry -c Release --no-build -- hello
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: HelloSentry-${{ github.sha }}
+          path: |
+            src/HelloSentry/bin/Release/net10.0/*.dll
+            src/HelloSentry/bin/Release/net10.0/*.pdb
