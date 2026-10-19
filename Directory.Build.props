@@ -18,11 +18,15 @@
     <!-- Write the repo URL into the PDB / NuSpec instead of a local disk path. -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-    <!-- Embed only sources git does not track (generated files). Tracked .cs files are
-         deliberately NOT embedded: Sentry fetches them from GitHub through the
-         GitHub integration + code mapping, the way a private enterprise repo works.
-         (EmbedAllSources=true would ship the code inside the PDB instead.) -->
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Embed every source file in the PDB. The PDB is uploaded to Sentry and NOT
+         shipped with the app (CI's artifact leaves it out), so the code reaches Sentry
+         only, which renders it inline on each frame. The GitHub integration + code
+         mapping still provide "open in GitHub", suspect commits and code owners;
+         Sentry does not render .NET code from GitHub by itself.
+         Why not SentryUploadSources (a separate source bundle)? sentry-cli reads the
+         files at the paths stored in the PDB, which are the normalised /_/src/...
+         paths below, so it finds nothing and bundles nothing. -->
+    <EmbedAllSources>true</EmbedAllSources>
 
     <!-- Deterministic builds: identical source + commit => identical binary + PDB. -->
     <Deterministic>true</Deterministic>

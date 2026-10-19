@@ -74,7 +74,7 @@ In [`Directory.Build.props`](Directory.Build.props):
 |---|---|
 | `DebugType=portable` | The only symbol format Sentry reads for managed .NET. |
 | `PublishRepositoryUrl=true` | Puts the GitHub URL in the PDB instead of a local path. |
-| `EmbedUntrackedSources=true` | Only generated files go inside the PDB; tracked code is fetched from GitHub. |
+| `EmbedAllSources=true` | Source rides inside the PDB, which goes to Sentry only (not shipped), so frames show code inline. GitHub supplies links + suspect commits. |
 | `ContinuousIntegrationBuild=true` (CI + any Release build) | Normalises paths to `/_/src/...` — one stable stack root for the code mapping. |
 | `IncludeSourceRevisionInInformationalVersion` | Version becomes `1.0.0+<sha>`; the app reuses it as the Sentry release. |
 | `SentryUploadSymbols` | Uploads the PDBs after every build. |
