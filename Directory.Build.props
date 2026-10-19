@@ -18,8 +18,11 @@
     <!-- Write the repo URL into the PDB / NuSpec instead of a local disk path. -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-    <!-- Embed sources that git does not track (generated files) so no frame is blank. -->
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Embed every source file in the PDB. Sentry reads them straight out of the
+         uploaded symbols, so frames show the code inline with no GitHub integration.
+         (EmbedUntrackedSources alone is not enough: sentry-cli then sees "embedded
+         sources", skips the source bundle, and frames come back with no context.) -->
+    <EmbedAllSources>true</EmbedAllSources>
 
     <!-- Deterministic builds: identical source + commit => identical binary + PDB. -->
     <Deterministic>true</Deterministic>
