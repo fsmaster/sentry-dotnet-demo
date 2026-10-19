@@ -17,7 +17,8 @@ jobs:
       SENTRY_ORG: ${{ vars.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
       SENTRY_URL: ${{ vars.SENTRY_URL }}          # omit for sentry.io
-      SENTRY_RELEASE: ${{ github.sha }}
+      # No SENTRY_RELEASE: the Sentry targets read the release from the built assembly
+      # (HelloSentry@1.0.0+<sha>), the same string the app reports at runtime.
 
     steps:
       - uses: actions/checkout@v7

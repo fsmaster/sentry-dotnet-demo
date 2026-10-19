@@ -74,8 +74,8 @@ In [`Directory.Build.props`](Directory.Build.props):
 |---|---|
 | `DebugType=portable` | The only symbol format Sentry reads for managed .NET. |
 | `PublishRepositoryUrl=true` | Puts the GitHub URL in the PDB instead of a local path. |
-| `EmbedAllSources=true` | Sources ride inside the PDB, so Sentry shows the code inline on every frame. |
-| `ContinuousIntegrationBuild=true` (CI only) | Normalises paths to `/_/src/...` — a stable stack root for the code mapping. |
+| `EmbedUntrackedSources=true` | Only generated files go inside the PDB; tracked code is fetched from GitHub. |
+| `ContinuousIntegrationBuild=true` (CI + any Release build) | Normalises paths to `/_/src/...` — one stable stack root for the code mapping. |
 | `IncludeSourceRevisionInInformationalVersion` | Version becomes `1.0.0+<sha>`; the app reuses it as the Sentry release. |
 | `SentryUploadSymbols` | Uploads the PDBs after every build. |
 | `SentryCreateRelease` + `SentrySetCommits` | Ties the release to git commits, which is what lets Sentry pick the right revision on GitHub. |
@@ -94,10 +94,11 @@ from failing the build; `-p:UseSentryCLI=false` disables the CLI outright.
    repository to it.
 3. **Add a code mapping** — Settings → Integrations → GitHub → Configurations → Code Mappings:
 
-   | Build | Stack Trace Root | Source Code Root |
-   |---|---|---|
-   | CI (`ContinuousIntegrationBuild=true`) | `/_/` | *(empty — repo root)* |
-   | Local Windows build | `C:\path\to\sentry-dotnet-demo\` | *(empty)* |
+   | Stack Trace Root | Source Code Root |
+   |---|---|
+   | `/_/` | *(empty — repo root)* |
+
+   Release builds (CI and local) both write `/_/src/...` paths, so one mapping covers them.
 
    Sentry often proposes the mapping automatically once it has seen one event with
    resolved file names — check the frame in the issue for a "Set up code mapping" prompt.
@@ -148,8 +149,7 @@ Upload the sources to Sentry instead of fetching them from GitHub:
 dotnet build src/HelloSentry -c Release -p:SentryUploadSources=true
 ```
 
-Not needed by default: `EmbedAllSources=true` already bakes the sources into the PDB.
-Use one or the other — the Sentry targets warn and disable the upload if both are on.
+Or `-p:EmbedAllSources=true` to bake them into the PDB. Use one or the other — the Sentry targets warn and disable the upload if both are on.
 
 ---
 

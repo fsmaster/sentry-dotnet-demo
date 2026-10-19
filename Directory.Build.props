@@ -18,15 +18,17 @@
     <!-- Write the repo URL into the PDB / NuSpec instead of a local disk path. -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-    <!-- Embed every source file in the PDB. Sentry reads them straight out of the
-         uploaded symbols, so frames show the code inline with no GitHub integration.
-         (EmbedUntrackedSources alone is not enough: sentry-cli then sees "embedded
-         sources", skips the source bundle, and frames come back with no context.) -->
-    <EmbedAllSources>true</EmbedAllSources>
+    <!-- Embed only sources git does not track (generated files). Tracked .cs files are
+         deliberately NOT embedded: Sentry fetches them from GitHub through the
+         GitHub integration + code mapping, the way a private enterprise repo works.
+         (EmbedAllSources=true would ship the code inside the PDB instead.) -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
     <!-- Deterministic builds: identical source + commit => identical binary + PDB. -->
     <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <!-- Normalise source paths in the PDB to /_/src/... so CI and local Release builds
+         share one stack trace root, and one Sentry code mapping (/_/ -> repo root). -->
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true' Or '$(Configuration)' == 'Release'">true</ContinuousIntegrationBuild>
 
     <!-- Append the commit SHA to the informational version: "1.0.0+<sha>".
          The app reads it back at runtime and uses it as the Sentry release name. -->
