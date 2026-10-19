@@ -55,6 +55,11 @@
     <SentryAuthToken Condition="'$(SentryAuthToken)' == ''">$(SENTRY_AUTH_TOKEN)</SentryAuthToken>
     <SentryUrl Condition="'$(SentryUrl)' == ''">$(SENTRY_URL)</SentryUrl>
 
+    <!-- Must be set up front. The Sentry targets work out the release name (after
+         AfterBuild) before they default UseSentryCLI (after Build), so without this
+         the release step is silently skipped and no commits get associated. -->
+    <UseSentryCLI Condition="'$(UseSentryCLI)' == ''">true</UseSentryCLI>
+
     <!-- Upload the portable PDBs so frames get file names and line numbers. -->
     <SentryUploadSymbols Condition="'$(SentryUploadSymbols)' == ''">true</SentryUploadSymbols>
 
